@@ -34,3 +34,8 @@
 
 (defn trim-any [k]
   (keyword (s/replace (name k) #"(on-)*(any-)*(.*)" "$1$3")))
+
+(use 'clojure.pprint)
+(defn debug [x]
+  (pprint x)
+  x)

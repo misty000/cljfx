@@ -12,6 +12,8 @@
 
   (:require [clojure.java.io :as io]))
 
+(javafx.embed.swing.JFXPanel.)
+
 (load "core_property")
 (load "core_coerce")
 (load "core_event")

@@ -67,3 +67,6 @@
       (config-draggable! drag-mode grp))
 
     (launch root)))
+
+
+(draggable-panel)

@@ -22,12 +22,14 @@
    注意事項:
      impl_XXX や private なプロパティも取得できてしまっているが、使っても多分例外になるので使用しない事。"
   [obj]
+  (debug obj)
   (let [base-props
         (->> (:members (r/reflect obj :ancestors true))
              (map #(dissoc % :declaring-class :parameter-types :exception-types))
              (map #(update-in % [:name] str))
              (map #(update-in % [:return-type] str))
              (filter #(re-find #".*Property$" (:name %)))
+             debug
              (map #(update-in % [:name] (fn [s] (s/replace s #"(.*)Property$" "$1"))))
              (map #(update-in % [:return-type] (fn [s] (Class/forName s)))))]
     (zipmap (map (comp keyword camel->dash :name) base-props) base-props)))
