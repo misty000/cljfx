@@ -24,3 +24,5 @@
                      (v! txt :text "listener removed.")))
 
     (launch root)))
+
+(run-later (change-listener))

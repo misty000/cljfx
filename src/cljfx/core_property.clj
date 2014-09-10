@@ -27,11 +27,15 @@
         (->> (:members (r/reflect obj :ancestors true))
              (map #(dissoc % :declaring-class :parameter-types :exception-types))
              (map #(update-in % [:name] str))
-             (map #(update-in % [:return-type] str))
+             ;(map #(assoc % :return-type-str (str (:return-type %))))
+             (map #(if (contains? % :return-type)
+                    (update-in % [:return-type] str)
+                    %))
              (filter #(re-find #".*Property$" (:name %)))
-             debug
              (map #(update-in % [:name] (fn [s] (s/replace s #"(.*)Property$" "$1"))))
-             (map #(update-in % [:return-type] (fn [s] (Class/forName s)))))]
+             (map #(if (contains? % :return-type)
+                    (update-in % [:return-type] (fn [s] (Class/forName s)))
+                    %)))]
     (zipmap (map (comp keyword camel->dash :name) base-props) base-props)))
 
 (def ^:private properties (memoize properties-fn))
@@ -68,10 +72,10 @@
   "JavaFX UI インスタンスのプロパティ値を変更する。"
   ([target prop value] (clj-invoke target (setter-str target prop) value))
   ([target prop value & prop-values]
-     {:pre [(even? (count prop-values))]}
-     (v! target prop value)
-     (doseq [pvs (partition 2 prop-values)]
-       (v! target (first pvs) (second pvs)))))
+   {:pre [(even? (count prop-values))]}
+   (v! target prop value)
+   (doseq [pvs (partition 2 prop-values)]
+     (v! target (first pvs) (second pvs)))))
 
 (defn- prop-str
   [target prop]
