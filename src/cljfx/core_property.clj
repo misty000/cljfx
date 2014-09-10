@@ -43,8 +43,11 @@
 ;; TODO: ここエラーハンドリングきっちりしときたいが
 (defn- clj-invoke
   [target meth & args]
+  (prn '**clj-invoke** '< target '> meth args)
   (try (clojure.lang.Reflector/invokeInstanceMethod target meth (to-array args))
-       (catch Exception e (.getMessage e))))
+       (catch Exception e
+         (.printStackTrace e)
+         (.getMessage e))))
 ;         (throw (IllegalArgumentException. (str "No matching method: " meth " on "
 ;                                                (class target))))
 ;         (clojure.repl/pst))))
