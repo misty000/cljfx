@@ -5,8 +5,15 @@
 (require '[clojure.reflect :as r]
          '[clojure.string :as s])
 
+
+;--------------- Utils
+(defn- upper-case-1st [s]
+  (if s
+    (apply str (cons (Character/toUpperCase (first s)) (rest s)))
+    str))
+
 ;  JavaFX Property を扱う関数。
-(defn- properties-fn
+(defn- properties-fn-old
   "指定 JavaFX UI インスタンスのプロパティ情報を取得する。
    プロパティ名をキーとしたマップを返す。
 
@@ -38,7 +45,9 @@
                     %)))]
     (zipmap (map (comp keyword camel->dash :name) base-props) base-props)))
 
-(def ^:private properties (memoize properties-fn))
+
+
+(def ^:private properties-old (memoize properties-fn-old))
 
 ;; TODO: ここエラーハンドリングきっちりしときたいが
 (defn- clj-invoke
@@ -52,28 +61,23 @@
 ;                                                (class target))))
 ;         (clojure.repl/pst))))
 
-(defn- upper-case-1st [s]
-  (if s
-    (apply str (cons (Character/toUpperCase (first s)) (rest s)))
-    str))
-
-(defn- getter-str
+(defn- getter-str-old
   [target prop]
-  (str (if (isa? (-> (properties target) prop :return-type) BooleanExpression) "is" "get")
-       (-> (properties target) prop :name upper-case-1st)))
+  (str (if (isa? (-> (properties-old target) prop :return-type) BooleanExpression) "is" "get")
+       (-> (properties-old target) prop :name upper-case-1st)))
 
-(defn v
+(defn v-old
   "JavaFX UI インスタンスのプロパティ値を取得する。"
   [target prop]
-  (clj-invoke target (getter-str target prop)))
+  (clj-invoke target (getter-str-old target prop)))
 
-(defn- setter-str
+(defn- setter-str-old
   [target prop]
-  (str "set" (-> (properties target) prop :name upper-case-1st)))
+  (str "set" (-> (properties-old target) prop :name upper-case-1st)))
 
 (defn v!
   "JavaFX UI インスタンスのプロパティ値を変更する。"
-  ([target prop value] (clj-invoke target (setter-str target prop) value))
+  ([target prop value] (clj-invoke target (setter-str-old target prop) value))
   ([target prop value & prop-values]
    {:pre [(even? (count prop-values))]}
    (v! target prop value)
@@ -82,9 +86,55 @@
 
 (defn- prop-str
   [target prop]
-  (str (-> (properties target) prop :name) "Property"))
+  (str (-> (properties-old target) prop :name) "Property"))
 
 (defn p
   "JavaFX UI インスタンスのプロパティそのものを取得する。主に bind 用。"
   [target prop]
   (clj-invoke target (prop-str target prop)))
+
+;;==========================================
+;;================ New Apis ================
+;;==========================================
+(defn- properties-fn
+  [cls]
+  (let [base-props
+        (->> (r/type-reflect cls :ancestors true)
+             :members
+             (map #(update-in % [:name] str))
+             (filter #(contains? (:flags %) :public))
+             (filter #(not (.startsWith (:name %) "impl_")))
+             (filter #(re-find #".*Property$" (:name %)))
+             (map #(dissoc % :declaring-class :parameter-types :exception-types))
+             (map #(update-in % [:name] (fn [s] (s/replace s #"(.*)Property$" "$1"))))
+             (map #(update-in % [:return-type] (fn [sym] (Class/forName (str sym))))))
+        keyed-props (map (comp keyword camel->dash :name) base-props)]
+    (zipmap keyed-props base-props)))
+
+(def ^:private properties (memoize properties-fn))
+
+;------------------ Getter
+(defn- getter-str
+  [cls prop]
+  (str (if (isa? (-> (properties cls) prop :return-type) BooleanExpression) "is" "get")
+       (-> (properties cls) prop :name upper-case-1st)))
+
+(defn- getter-fn*
+  [cls prop]
+  (let [meth (symbol (getter-str cls prop))
+        tag (symbol (.getName cls))
+        arg0 (gensym)]
+    (eval `(fn [~(with-meta arg0 {:tag tag})]
+             (. ~arg0 ~meth)))))
+
+(def getter-fn (memoize getter-fn*))
+
+;------------------- Setter
+
+(defn- setter-str
+  [cls prop]
+  (str "set" (-> (properties-old cls) prop :name upper-case-1st)))
+
+(defn setter-fn*
+  [cls prop]
+  (let [meth (symbol (str "set"))]))

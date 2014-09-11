@@ -1,6 +1,6 @@
-(ns ^{:doc "内部ユーティリティ関数。"
+(ns ^{:doc    "内部ユーティリティ関数。"
       :no-doc true}
-   cljfx.util
+    cljfx.util
 
   (:require [clojure.string :as s]))
 
@@ -36,6 +36,6 @@
   (keyword (s/replace (name k) #"(on-)*(any-)*(.*)" "$1$3")))
 
 (use 'clojure.pprint)
-(defn debug [x]
-  (pprint x)
+(defn debug [& [x]]
+  (when x (pprint x))
   x)
