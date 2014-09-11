@@ -9,8 +9,10 @@
 ;--------------- Utils
 (defn- upper-case-1st [s]
   (if s
-    (apply str (cons (Character/toUpperCase (first s)) (rest s)))
+    (apply str (cons (Character/toUpperCase ^char (first s)) (rest s)))
     str))
+
+;;============== Deprecated ==============
 
 ;  JavaFX Property を扱う関数。
 (defn- properties-fn-old
@@ -29,7 +31,7 @@
    注意事項:
      impl_XXX や private なプロパティも取得できてしまっているが、使っても多分例外になるので使用しない事。"
   [obj]
-  (debug obj)
+  (binding [*out* *err*] (println "the function was deprecated"))
   (let [base-props
         (->> (:members (r/reflect obj :ancestors true))
              (map #(dissoc % :declaring-class :parameter-types :exception-types))
@@ -52,6 +54,7 @@
 ;; TODO: ここエラーハンドリングきっちりしときたいが
 (defn- clj-invoke
   [target meth & args]
+  (binding [*out* *err*] (println "the function was deprecated"))
   (prn '**clj-invoke** '< target '> meth args)
   (try (clojure.lang.Reflector/invokeInstanceMethod target meth (to-array args))
        (catch Exception e
@@ -63,35 +66,41 @@
 
 (defn- getter-str-old
   [target prop]
+  (binding [*out* *err*] (println "the function was deprecated"))
   (str (if (isa? (-> (properties-old target) prop :return-type) BooleanExpression) "is" "get")
        (-> (properties-old target) prop :name upper-case-1st)))
 
 (defn v-old
   "JavaFX UI インスタンスのプロパティ値を取得する。"
   [target prop]
+  (binding [*out* *err*] (println "the function was deprecated"))
   (clj-invoke target (getter-str-old target prop)))
 
 (defn- setter-str-old
   [target prop]
+  (binding [*out* *err*] (println "the function was deprecated"))
   (str "set" (-> (properties-old target) prop :name upper-case-1st)))
 
-(defn v!
+(defn v!-old
   "JavaFX UI インスタンスのプロパティ値を変更する。"
-  ([target prop value] (clj-invoke target (setter-str-old target prop) value))
+  ([target prop value]
+   (binding [*out* *err*] (println "the function was deprecated"))
+   (clj-invoke target (setter-str-old target prop) value))
   ([target prop value & prop-values]
    {:pre [(even? (count prop-values))]}
-   (v! target prop value)
+   (v!-old target prop value)
    (doseq [pvs (partition 2 prop-values)]
-     (v! target (first pvs) (second pvs)))))
+     (v!-old target (first pvs) (second pvs)))))
 
-(defn- prop-str
+(defn- prop-str-old
   [target prop]
+  (binding [*out* *err*] (println "the function was deprecated"))
   (str (-> (properties-old target) prop :name) "Property"))
 
-(defn p
+(defn p-old
   "JavaFX UI インスタンスのプロパティそのものを取得する。主に bind 用。"
   [target prop]
-  (clj-invoke target (prop-str target prop)))
+  (clj-invoke target (prop-str-old target prop)))
 
 ;;==========================================
 ;;================ New Apis ================
@@ -103,7 +112,7 @@
              :members
              (map #(update-in % [:name] str))
              (filter #(contains? (:flags %) :public))
-             (filter #(not (.startsWith (:name %) "impl_")))
+             (filter #(not (.startsWith ^String (:name %) "impl_")))
              (filter #(re-find #".*Property$" (:name %)))
              (map #(dissoc % :declaring-class :parameter-types :exception-types))
              (map #(update-in % [:name] (fn [s] (s/replace s #"(.*)Property$" "$1"))))
@@ -120,21 +129,46 @@
        (-> (properties cls) prop :name upper-case-1st)))
 
 (defn- getter-fn*
-  [cls prop]
+  [^Class cls prop]
+  (println "getter-fn*")
   (let [meth (symbol (getter-str cls prop))
         tag (symbol (.getName cls))
         arg0 (gensym)]
-    (eval `(fn [~(with-meta arg0 {:tag tag})]
-             (. ~arg0 ~meth)))))
+    (eval
+      `(fn [~(with-meta arg0 {:tag tag})]
+         (. ~arg0 ~meth)))))
 
-(def getter-fn (memoize getter-fn*))
+(def ^:private getter-fn (memoize getter-fn*))
+
+(defn v [target prop]
+  (let [cls (class target)
+        getter (getter-fn cls prop)]
+    (getter target)))
 
 ;------------------- Setter
-
 (defn- setter-str
   [cls prop]
-  (str "set" (-> (properties-old cls) prop :name upper-case-1st)))
+  (str "set" (-> (properties cls) prop :name upper-case-1st)))
 
-(defn setter-fn*
-  [cls prop]
-  (let [meth (symbol (str "set"))]))
+(defn- setter-fn*
+  [^Class cls prop]
+  (let [meth (symbol (setter-str cls prop))
+        tag (symbol (.getName cls))
+        arg0 (gensym)
+        arg1 (gensym)]
+    (eval
+      `(fn [~(with-meta arg0 {:tag tag}) ~arg1]
+         (. ~arg0 (~meth ~arg1))))))
+
+(def ^:private setter-fn (memoize setter-fn*))
+
+(defn v!
+  ([target prop value]
+   (let [cls (class target)
+         setter (setter-fn cls prop)]
+     (setter target value)))
+  ([target prop value & prop-values]
+   {:pre [(even? (count prop-values))]}
+   (v! target prop value)
+   (doseq [pvs (partition 2 prop-values)]
+     (v! target (first pvs) (second pvs)))))

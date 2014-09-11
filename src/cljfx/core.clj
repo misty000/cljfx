@@ -118,3 +118,9 @@ A modification of run-later waiting for the running method to return. You should
   "指定したキーコードの javafx.scene.input.KeyCode オブジェクトを返す。
    大文字小文字の区别はない。"
   (memoize kbd*))
+
+(defn exit []
+  (Platform/exit)
+  (shutdown-agents))
+
+(when *compile-files* (exit))

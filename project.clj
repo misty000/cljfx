@@ -10,5 +10,4 @@
             :codox {:exclude cljfx.deprecated.bind}
             :profiles {:dev {:resource-paths ["sample-resources"]}}
 
-            :aot [cljfx.primary]
-            :target-path "target/%s")
+            :aot [cljfx.primary cljfx.core])
