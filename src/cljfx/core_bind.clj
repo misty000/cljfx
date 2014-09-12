@@ -1,7 +1,7 @@
 (in-ns 'cljfx.core)
 
-(import javafx.beans.Observable
-        javafx.beans.property.Property
+(import '[javafx.beans Observable]
+        '[javafx.beans.property Property]
         javafx.beans.binding.ObjectBinding)
 
 ;; javafx.beans.binding.ObjectBinding#bind() を見えるようにする為だけの継承クラス
@@ -76,3 +76,7 @@
        (bind! (p bound-obj bound-key) (p dep-obj dep-key))))
 
   (unbind! [x key] (.unbind ^Property (p x key))))
+
+(defn when*
+  []
+  (Bindings/when))
