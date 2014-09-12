@@ -34,6 +34,18 @@
       (println (time (v btn :text)))
       (println (time (v btn :text)))
       (println (time (v btn :text)))
+
+      (println "===== get property with java")
+      (println (time (.textProperty btn)))
+      (println (time (.textProperty btn)))
+      (println (time (.textProperty btn)))
+      (println (time (.textProperty btn)))
+
+      (println "===== get property with p")
+      (println (time (p btn :text)))
+      (println (time (p btn :text)))
+      (println (time (p btn :text)))
+      (println (time (p btn :text)))
       ))
   (exit))
 

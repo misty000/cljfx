@@ -1,6 +1,7 @@
 (in-ns 'cljfx.core)
 
-(import javafx.beans.binding.BooleanExpression)
+(import javafx.beans.binding.BooleanExpression
+        javafx.beans.value.ObservableValue)
 (use 'cljfx.util)
 (require '[clojure.reflect :as r]
          '[clojure.string :as s])
@@ -100,6 +101,7 @@
 (defn p-old
   "JavaFX UI インスタンスのプロパティそのものを取得する。主に bind 用。"
   [target prop]
+  (binding [*out* *err*] (println "the function was deprecated"))
   (clj-invoke target (prop-str-old target prop)))
 
 ;;==========================================
@@ -140,7 +142,8 @@
 
 (def ^:private getter-fn (memoize getter-fn*))
 
-(defn v [target prop]
+(defn v
+  [target prop]
   (let [cls (class target)
         getter (getter-fn cls prop)]
     (getter target)))
@@ -172,3 +175,25 @@
    (v! target prop value)
    (doseq [pvs (partition 2 prop-values)]
      (v! target (first pvs) (second pvs)))))
+
+;------------------- Property
+(defn- prop-str
+  [^Class cls prop]
+  (str (-> (properties cls) prop :name) "Property"))
+
+(defn- prop-fn*
+  [^Class cls prop]
+  (let [meth (symbol (prop-str cls prop))
+        tag (symbol (.getName cls))
+        arg0 (gensym)]
+    (eval
+      `(fn [~(with-meta arg0 {:tag tag})]
+         (. ~arg0 ~meth)))))
+
+(def ^:private prop-fn (memoize prop-fn*))
+
+(defn p
+  ^ObservableValue [target prop]
+  (let [cls (class target)
+        propfn (prop-fn cls prop)]
+    (propfn target)))
