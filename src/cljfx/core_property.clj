@@ -132,7 +132,6 @@
 
 (defn- getter-fn*
   [^Class cls prop]
-  (println "getter-fn*")
   (let [meth (symbol (getter-str cls prop))
         tag (symbol (.getName cls))
         arg0 (gensym)]

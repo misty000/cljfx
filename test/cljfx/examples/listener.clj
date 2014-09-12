@@ -1,5 +1,8 @@
 (ns cljfx.examples.listener
-  (:use cljfx.core))
+  (:use cljfx.core)
+  (:import [javafx.scene Node]
+           [javafx.beans InvalidationListener]
+           [javafx.beans.value ObservableValue]))
 
 (set! *warn-on-reflection* true)
 
@@ -7,7 +10,6 @@
 
 (defn change-listener []
   (let [root (load-fxml "change-listener.fxml")
-        _ (prn "==" root)
         txt (fseek root "#txt")
         rect (fseek root "#rect")
         hover-listener (listener :invalidated
@@ -17,14 +19,16 @@
                                      (v! txt :text "not hovered."))))]
 
     (v! (fseek root "#add")
-        :on-action (listened [_ e]
-                             (.addListener (p rect :hover) hover-listener)
+        :on-action (handler [_ e]
+                             (listen! (p rect :hover) hover-listener)
                              (v! txt :text "listener added.")))
 
     (v! (fseek root "#remove")
-        :on-action (listened [_ e]
-                             (.removeListener (p rect :hover) hover-listener)
+        :on-action (handler [_ e]
+                             (unlisten! (p rect :hover) hover-listener)
                              (v! txt :text "listener removed.")))
 
     (launch root)
     (run-later (prn (.getScene (fseek root "#add"))))))
+
+(change-listener)

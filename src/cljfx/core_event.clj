@@ -1,8 +1,10 @@
 (in-ns 'cljfx.core)
 
-(import javafx.scene.Node
-        '[javafx.event EventHandler EventType]
-        '[javafx.event Event ActionEvent]
+(import '[javafx.event Event ActionEvent EventHandler EventType]
+        '[javafx.beans InvalidationListener]
+        '[javafx.beans.value ChangeListener]
+
+        '[javafx.scene Node]
         '[javafx.scene.control
           ListView$EditEvent
           CheckBoxTreeItem$TreeModificationEvent
@@ -10,7 +12,8 @@
           TreeItem$TreeModificationEvent
           TreeView$EditEvent]
 
-        '[javafx.scene.media MediaMarkerEvent MediaErrorEvent]
+        '[javafx.scene.media
+          MediaMarkerEvent MediaErrorEvent]
 
         '[javafx.scene.input
           InputEvent ContextMenuEvent DragEvent
@@ -18,16 +21,11 @@
           SwipeEvent ZoomEvent InputMethodEvent
           KeyEvent MouseEvent MouseDragEvent TouchEvent]
 
-         javafx.scene.web.WebEvent
-         javafx.stage.WindowEvent
-         javafx.concurrent.WorkerStateEvent)
+        '[javafx.scene.web WebEvent]
+        '[javafx.stage WindowEvent]
+        '[javafx.concurrent WorkerStateEvent])
 
 (use 'cljfx.util)
-
-(import javafx.event.EventHandler
-        javafx.beans.InvalidationListener
-        javafx.beans.value.ChangeListener)
-
 
 (defmacro ^:private listener*
   [cls ifmethod f & args]
@@ -36,7 +34,7 @@
        (~ifmethod [this# ~@arg-syms] (apply ~f [this# ~@arg-syms])))))
 
 (defmulti listener "各種 listener 生成マルチメソッド"
-  (fn [listener-type f & receivers] (identity listener-type)))
+          (fn [listener-type f & receivers] (identity listener-type)))
 
 (defmethod listener :event [listener-type f]
   (listener* EventHandler handle f event))
@@ -47,7 +45,7 @@
 (defmethod listener :changed [listener-type f]
   (listener* ChangeListener changed f ovservable old-value new-value))
 
-(defmacro listened
+(defmacro handler
   "EventHandler 簡易生成マクロ。
 
    body を実行する EventHandler を生成し、body 実行後は Event.consume() も行う。"
@@ -55,7 +53,13 @@
   `(listener :event (fn ~obj-and-event
                       (try ~@body
                            (finally
-                             (.consume ~(obj-and-event 1)))))))
+                             (.consume ~(with-meta (obj-and-event 1) {:tag "javafx.event.Event"})))))))
+
+(defn listen! [^ObservableValue obs listener]
+  (.addListener obs listener))
+
+(defn unlisten! [^ObservableValue obs listener]
+  (.removeListener obs listener))
 
 ;; リストアップはほぼ力技
 #_(def ^:private event-classes
@@ -105,7 +109,7 @@
 (def ^:private event-map
   (reduce (fn [m c]
             (assoc m (trim-any (const->key (str c)))
-               c)) {} event-typenames))
+                     c)) {} event-typenames))
 
 (defn- event-exists? [k] (not (nil? (event-map k))))
 

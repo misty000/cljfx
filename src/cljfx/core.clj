@@ -6,6 +6,8 @@
            javafx.fxml.FXMLLoader
 
            javafx.scene.Node
+           javafx.scene.Parent
+           javafx.stage.Stage
            javafx.scene.control.Skin
 
            cljfx.primary)
@@ -24,7 +26,7 @@
 
    JavaFX CSS セレクタ書式に従ってマッチする Node を返す。
    セレクタの結果複数となっても最初の Node のみ返す。"
-  [^Node node fmt]
+  ^Node [^Node node fmt]
   (.lookup node fmt))
 
 (defmacro nid-let
@@ -46,9 +48,9 @@
 
    オブジェクト操作を目的としている為、シーケンスを返す際 javafx.scene.control.Skin なものは除外する。
    (いいのかどうか分からんが)"
-  [node fmt]
+  [^Node node fmt]
   (letfn [(skin? [obj]
-                 (isa? (class obj) javafx.scene.control.Skin))]
+                 (isa? (class obj) Skin))]
     (->> (.lookupAll node fmt)
          (remove skin?))))
 
@@ -88,13 +90,13 @@ A modification of run-later waiting for the running method to return. You should
   [& body]
   `(run-await* (fn [] ~@body)))
 
-(defn show [stage]
+(defn show [^Stage stage]
   (run-later (.show stage)))
 
-(defn fill-scene! [root]
+(defn fill-scene! [^Parent root]
   (run-await (v! (primary/getPrimaryScene) :root root)))
 
-(defn launch [root & args]
+(defn launch [^Parent root & args]
   ;; 単に今のとは別スレッドで走らせたいだけなので future は何も受け取らない
   ;; 以降 StackTrace が取れなくなると言う問題は残るが
   (future (apply launch-await args))
