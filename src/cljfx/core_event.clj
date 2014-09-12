@@ -58,28 +58,28 @@
 
 (defmulti listen! (fn [_ listener] (type listener)))
 
-(defmacro ^:private def-listen*
+(defmacro ^:private def-listen!
   [cls]                                                     ; Symbol
   (let [arg0 (with-meta (gensym) {:tag "javafx.beans.value.ObservableValue"})
         arg1 (with-meta (gensym) {:tag cls})]
     `(defmethod listen! ~cls [~arg0 ~arg1]
        (.addListener ~arg0 ~arg1))))
 
-(def-listen* InvalidationListener)
-(def-listen* ChangeListener)
+(def-listen! InvalidationListener)
+(def-listen! ChangeListener)
 
 
 (defmulti unlisten! (fn [_ listener] (type listener)))
 
-(defmacro ^:private def-unlisten*
+(defmacro ^:private def-unlisten!
   [cls]                                                     ; Symbol
   (let [arg0 (with-meta (gensym) {:tag "javafx.beans.value.ObservableValue"})
         arg1 (with-meta (gensym) {:tag cls})]
     `(defmethod unlisten! ~cls [~arg0 ~arg1]
        (.removeListener ~arg0 ~arg1))))
 
-(def-unlisten* InvalidationListener)
-(def-unlisten* ChangeListener)
+(def-unlisten! InvalidationListener)
+(def-unlisten! ChangeListener)
 
 ;; リストアップはほぼ力技
 #_(def ^:private event-classes
