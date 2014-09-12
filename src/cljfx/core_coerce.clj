@@ -1,7 +1,6 @@
 (in-ns 'cljfx.core)
 
-(import javafx.collections.FXCollections
-        javafx.beans.Observable
+(import '[javafx.collections FXCollections]
         '[javafx.beans.property
           SimpleBooleanProperty SimpleIntegerProperty SimpleDoubleProperty SimpleStringProperty
           SimpleListProperty SimpleMapProperty SimpleSetProperty])
@@ -57,16 +56,16 @@
   (as-prop [this]))
 
 (extend-protocol IPropertyValueFactory
-  java.lang.Boolean
+  Boolean
   (as-prop [x] (SimpleBooleanProperty. x))
 
-  java.lang.Long
+  Long
   (as-prop [x] (SimpleIntegerProperty. x))
 
-  java.lang.Double
+  Double
   (as-prop [x] (SimpleDoubleProperty. x))
 
-  java.lang.String
+  String
   (as-prop [x] (SimpleStringProperty. x))
 
   javafx.collections.ObservableList

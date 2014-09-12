@@ -1,7 +1,7 @@
 (in-ns 'cljfx.core)
 
-(import javafx.beans.binding.BooleanExpression
-        javafx.beans.value.ObservableValue)
+(import '[javafx.beans.binding BooleanExpression]
+        '[javafx.beans.value ObservableValue])
 (use 'cljfx.util)
 (require '[clojure.reflect :as r]
          '[clojure.string :as s])
@@ -192,7 +192,7 @@
 (def ^:private prop-fn (memoize prop-fn*))
 
 (defn p
-  ^ObservableValue [target prop]
+  ^"javafx.beans.value.ObservableValue" [target prop]
   (let [cls (class target)
         propfn (prop-fn cls prop)]
     (propfn target)))

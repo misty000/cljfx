@@ -65,18 +65,14 @@
 (extend-protocol IBindable
 
   javafx.beans.property.Property
-  (bind! [bound dep] (.bind bound dep))
-  (unbind! [x] (.unbind x))
+  (bind! [bound dep] (. bound (bind dep) ))
+  (unbind! [bound] (.unbind bound))
 
   javafx.scene.Node
   (bind!
     ([node key dep]
        (bind! (p node key) dep))
-    ([bound-obj bound-key dep-obj dep-key]
-       (bind! (p bound-obj bound-key) (p dep-obj dep-key))))
+    ([bound-node bound-key dep-node dep-key]
+       (bind! (p bound-node bound-key) (p dep-node dep-key))))
 
-  (unbind! [x key] (.unbind ^Property (p x key))))
-
-(defn when*
-  []
-  (Bindings/when))
+  (unbind! [node key] (.unbind ^Property (p node key))))

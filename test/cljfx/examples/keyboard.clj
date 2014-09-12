@@ -2,7 +2,7 @@
   (:use cljfx.core)
   (:import [javafx.beans.binding Bindings]
            [javafx.beans.value ObservableValue]
-           [javafx.beans.property Property]
+           [javafx.beans.property Property BooleanProperty]
            [javafx.scene.input KeyCode KeyEvent]
            [javafx.scene.paint Color]
            [javafx.scene Node]
@@ -21,7 +21,7 @@
   (set-pressed! [this v] "class Key#setPressed()")
   (create-node [this] "class Key#createNode()"))
 
-(deftype Key [^KeyCode key ^:volatile-mutable pressed]
+(deftype Key [^KeyCode key ^:volatile-mutable ^BooleanProperty pressed]
   IKey
   (key-code [this] key)
   (set-pressed! [this v] (.set pressed v))
@@ -38,7 +38,7 @@
                       (= (.getEventType key-event) KeyEvent/KEY_PRESSED))
                 (.consume key-event))))]
       (do
-        (.bind ^Property (p bg :fill)
+        (.bind (p bg :fill)
                (.. (Bindings/when pressed)
                    (then Color/RED)
                    (otherwise (.. (Bindings/when (p node :focused))
@@ -66,7 +66,7 @@
 ;;; Keyboard クラス込みの起動関数
 ;;;
 (defn keyboard-example []
-  (let [root (load-fxml "key.fxml")
+  (let [root (load-fxml "keyboard.fxml")
         key-codes (map #(Key. %1 %2)
                        (map kbd [\a \s \d \f])
                        (repeatedly #(as-prop false)))

@@ -55,11 +55,31 @@
                            (finally
                              (.consume ~(with-meta (obj-and-event 1) {:tag "javafx.event.Event"})))))))
 
-(defn listen! [^ObservableValue obs listener]
-  (.addListener obs listener))
 
-(defn unlisten! [^ObservableValue obs listener]
-  (.removeListener obs listener))
+(defmulti listen! (fn [_ listener] (type listener)))
+
+(defmacro ^:private def-listen*
+  [cls]                                                     ; Symbol
+  (let [arg0 (with-meta (gensym) {:tag "javafx.beans.value.ObservableValue"})
+        arg1 (with-meta (gensym) {:tag cls})]
+    `(defmethod listen! ~cls [~arg0 ~arg1]
+       (.addListener ~arg0 ~arg1))))
+
+(def-listen* InvalidationListener)
+(def-listen* ChangeListener)
+
+
+(defmulti unlisten! (fn [_ listener] (type listener)))
+
+(defmacro ^:private def-unlisten*
+  [cls]                                                     ; Symbol
+  (let [arg0 (with-meta (gensym) {:tag "javafx.beans.value.ObservableValue"})
+        arg1 (with-meta (gensym) {:tag cls})]
+    `(defmethod unlisten! ~cls [~arg0 ~arg1]
+       (.removeListener ~arg0 ~arg1))))
+
+(def-unlisten* InvalidationListener)
+(def-unlisten* ChangeListener)
 
 ;; リストアップはほぼ力技
 #_(def ^:private event-classes

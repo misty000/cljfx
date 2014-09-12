@@ -1,8 +1,10 @@
 (ns
-  cljfx.examples.draggable
+    cljfx.examples.draggable
   (:use cljfx.core)
 
   (:import javafx.beans.binding.Bindings))
+
+(set! *warn-on-reflection* true)
 
 ;; lein run -m cljfx.examples.draggable/draggable-panel
 
@@ -15,8 +17,8 @@
 
 (defn set-button-action! [b label]
   (v! b :on-action (listener :event
-                          (fn [_ e]
-                            (v! label :text (.. e getSource getText))))))
+                             (fn [_ e]
+                               (v! label :text (.. e getSource getText))))))
 
 ; こちらは v! の修正必要
 ;(defn set-button-action! [b label]
@@ -29,19 +31,19 @@
 (defn config-draggable! [drag-mode node]
   (let [anchor-x (atom 0.0)
         anchor-y (atom 0.0)
-        trans-x  (atom 0.0)
-        trans-y  (atom 0.0)]
+        trans-x (atom 0.0)
+        trans-y (atom 0.0)]
     (add-filter! node :mouse (fn [_ e]
-                                  (when (.get drag-mode) (.consume e))))
+                               (when (.get drag-mode) (.consume e))))
 
     (add-filter! node
                  :mouse-pressed
                  (fn [_ e]
-                  (when (.get drag-mode)
-                    (reset! anchor-x (.getX e))
-                    (reset! anchor-y (.getY e))
-                    (reset! trans-x  (v node :translate-x))
-                    (reset! trans-y  (v node :translate-y)))))
+                   (when (.get drag-mode)
+                     (reset! anchor-x (.getX e))
+                     (reset! anchor-y (.getY e))
+                     (reset! trans-x (v node :translate-x))
+                     (reset! trans-y (v node :translate-y)))))
 
     (add-filter! node
                  :mouse-dragged
@@ -51,7 +53,7 @@
                      (v! node :translate-y (+ @trans-y (.getY e) (- @anchor-y))))))))
 
 (defn draggable-panel []
-  (let [root  (load-fxml "draggable-panel.fxml")
+  (let [root (load-fxml "draggable-panel.fxml")
         drag-mode (as-prop true)]
     (.bind drag-mode (p (fseek root "#dragMode") :selected))
 
