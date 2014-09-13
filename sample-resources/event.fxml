@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Label id="count" layoutX="168.0" layoutY="59.0" text="0" />
+      <VBox alignment="TOP_CENTER" layoutX="14.0" layoutY="14.0" prefHeight="200.0" prefWidth="121.0" spacing="5.0">
+         <children>
+            <Label id="txt" />
+            <Button id="inc" mnemonicParsing="false" text="Inc" />
+            <Button id="add" mnemonicParsing="false" text="Add handler" />
+            <Button id="remove" mnemonicParsing="false" text="Remove handler" />
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>

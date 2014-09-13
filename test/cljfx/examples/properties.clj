@@ -1,5 +1,3 @@
-(set! *warn-on-reflection* true)
-
 (ns cljfx.examples.properties
   (:use cljfx.core
         cljfx.util)

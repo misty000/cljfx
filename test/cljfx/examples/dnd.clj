@@ -1,8 +1,10 @@
 (ns cljfx.examples.dnd
   (:import [javafx.scene.input TransferMode ClipboardContent]
-           javafx.scene.paint.Color)
+           javafx.scene.paint.Color [javafx.scene Node])
 
   (:use cljfx.core))
+
+(set! *warn-on-reflection* true)
 
 ;; 元ネタ: http://docs.oracle.com/javafx/2/drag_drop/HelloDragAndDrop.java.html
 ;; source -> target へ D&D するとテキストが入れ替わります
@@ -17,7 +19,7 @@
      (v! source 
          :on-drag-detected (handler [_ e]
                              (println "onDragDetected.")
-                             (let [db (.startDragAndDrop source TransferMode/ANY)
+                             (let [db (.startDragAndDrop ^Node source TransferMode/ANY)
                                    content (ClipboardContent.)]
                                (.putString content (.getText source))
                                (.setContent db content))))
@@ -45,3 +47,5 @@
                               (.setDropCompleted e true))))
 
      (launch root)))
+
+(hello-dnd)

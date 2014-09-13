@@ -27,11 +27,25 @@
 
 (use 'cljfx.util)
 
+(defprotocol ^:private PListener
+  (inner-fn [_]))
+
+(extend-protocol PListener
+  EventHandler
+  (inner-fn [_] nil)
+  InvalidationListener
+  (inner-fn [_] nil)
+  ChangeListener
+  (inner-fn [_] nil))
+
 (defmacro ^:private listener*
   [cls ifmethod f & args]
   (when-let [arg-syms (map (comp gensym str) args)]
-    `(reify ~cls
-       (~ifmethod [this# ~@arg-syms] (apply ~f [this# ~@arg-syms])))))
+    `(reify
+       ~cls
+       (~ifmethod [this# ~@arg-syms] (apply ~f [this# ~@arg-syms]))
+       PListener
+       (inner-fn [_] ~f))))
 
 (defmulti listener "各種 listener 生成マルチメソッド"
           (fn [listener-type f & receivers] (identity listener-type)))

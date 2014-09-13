@@ -26,7 +26,7 @@
 
    JavaFX CSS セレクタ書式に従ってマッチする Node を返す。
    セレクタの結果複数となっても最初の Node のみ返す。"
-  ^Node [^Node node fmt]
+  ^"javafx.scene.Node" [^Node node fmt]
   (.lookup node fmt))
 
 (defmacro nid-let
