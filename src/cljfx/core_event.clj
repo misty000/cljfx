@@ -1,6 +1,8 @@
 (in-ns 'cljfx.core)
 
-(import '[javafx.event Event ActionEvent EventHandler EventType]
+(import '[java.util WeakHashMap]
+        '[java.lang.ref WeakReference]
+        '[javafx.event Event ActionEvent EventHandler EventType]
         '[javafx.beans InvalidationListener]
         '[javafx.beans.value ChangeListener]
 
@@ -27,7 +29,7 @@
 
 (use 'cljfx.util)
 
-(defprotocol ^:private PListener
+(defprotocol PListener
   (inner-fn [_]))
 
 (extend-protocol PListener
@@ -38,14 +40,43 @@
   ChangeListener
   (inner-fn [_] nil))
 
+(def ^:private listeners (ref (WeakHashMap.)))
+
+(defn get-cached-listener [f]
+  (let [all (dosync (seq @listeners))]
+    (loop [[x & xs] all]
+      (when x
+        (let [v (.get (val x))]
+          (if (= f v)
+            (key x)
+            (recur xs)))))))
+
+(defn cache-listener! [f listener]
+  (let [weak-ref (WeakReference. f)]
+    (dosync
+      (.put @listeners listener weak-ref))
+    listener))
+
+;(defmacro ^:private listener*
+;  [cls ifmethod f & args]
+;  (when-let [arg-syms (map (comp gensym str) args)]
+;    `(if-let [cached-listener (get-cached-listener)]
+;       cached-listener
+;       )))
+
+;; TODO
 (defmacro ^:private listener*
   [cls ifmethod f & args]
   (when-let [arg-syms (map (comp gensym str) args)]
-    `(reify
-       ~cls
-       (~ifmethod [this# ~@arg-syms] (apply ~f [this# ~@arg-syms]))
-       PListener
-       (inner-fn [_] ~f))))
+    `(if-let [cached (get-cached-listener ~f)]
+       cached
+       (cache-listener!
+         ~f
+         (reify
+           ~cls
+           (~ifmethod [this# ~@arg-syms] (apply ~f [this# ~@arg-syms]))
+           PListener
+           (inner-fn [_] ~f))))))
 
 (defmulti listener "各種 listener 生成マルチメソッド"
           (fn [listener-type f & receivers] (identity listener-type)))

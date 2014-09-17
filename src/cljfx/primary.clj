@@ -28,7 +28,7 @@
 (defn -start [this s]
   (deliver stage s)
   (deliver scene (Scene. (Group.)))
-  (.setScene @stage @scene)
+  (.setScene ^Stage @stage @scene)
   (deliver ready true))
 
 (defn -stop [this]
