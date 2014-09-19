@@ -40,56 +40,46 @@
   ChangeListener
   (inner-fn [_] nil))
 
-(def ^:private listeners (agent []))
-  (def ^:private listeners (ref (WeakHashMap.)))
+;;-------------------------------------------
 
-(defn get-cached-listener [f]
-  (let [all (dosync (seq @listeners))]
-    (loop [[x & xs] all]
-      (when x
-        (let [v (.get (val x))]
-          (if (= f v)
-            (key x)
-            (recur xs)))))))
+(def ^:private listeners (WeakHashMap.))
 
-(defn cache-listener! [f listener]
-  (let [weak-ref (WeakReference. f)]
-    (dosync
-      (.put @listeners listener weak-ref))
-    listener))
-
-;(defmacro ^:private listener*
-;  [cls ifmethod f & args]
-;  (when-let [arg-syms (map (comp gensym str) args)]
-;    `(if-let [cached-listener (get-cached-listener)]
-;       cached-listener
-;       )))
-
-;; TODO
-(defmacro ^:private listener*
+(defmacro ^:private cached-listener*
   [cls ifmethod f & args]
   (when-let [arg-syms (map (comp gensym str) args)]
-    `(if-let [cached (get-cached-listener ~f)]
-       cached
-       (cache-listener!
-         ~f
-         (reify
-           ~cls
-           (~ifmethod [this# ~@arg-syms] (apply ~f [this# ~@arg-syms]))
-           PListener
-           (inner-fn [_] ~f))))))
+    `(locking listeners
+       (let [wref# (get listeners ~f)]
+         (if (and wref# (.get wref#))
+           (.get wref#)
+           (let [listener# (reify
+                             ~cls
+                             (~ifmethod [this# ~@arg-syms] (apply ~f [this# ~@arg-syms]))
+                             PListener
+                             (inner-fn [_] ~f))
+                 wref# (WeakReference. listener#)]
+             (.put listeners ~f wref#)
+             listener#))))))
+
+(defmacro ^:private ^:deprecated listener*
+  [cls ifmethod f & args]
+  (when-let [arg-syms (map (comp gensym str) args)]
+    `(reify
+       ~cls
+       (~ifmethod [this# ~@arg-syms] (apply ~f [this# ~@arg-syms]))
+       PListener
+       (inner-fn [_] ~f))))
 
 (defmulti listener "各種 listener 生成マルチメソッド"
           (fn [listener-type f & receivers] (identity listener-type)))
 
 (defmethod listener :event [listener-type f]
-  (listener* EventHandler handle f event))
+  (cached-listener* EventHandler handle f event))
 
 (defmethod listener :invalidated [listener-type f]
-  (listener* InvalidationListener invalidated f ovservable))
+  (cached-listener* InvalidationListener invalidated f ovservable))
 
 (defmethod listener :changed [listener-type f]
-  (listener* ChangeListener changed f ovservable old-value new-value))
+  (cached-listener* ChangeListener changed f ovservable old-value new-value))
 
 (defmacro handler
   "EventHandler 簡易生成マクロ。
