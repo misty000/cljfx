@@ -1,6 +1,7 @@
 (in-ns 'cljfx.core)
 
-(import '[java.util WeakHashMap]
+(import '[clojure.lang Keyword IFn]
+        '[java.util WeakHashMap]
         '[java.lang.ref WeakReference]
         '[javafx.event Event ActionEvent EventHandler EventType]
         '[javafx.beans InvalidationListener]
@@ -91,8 +92,11 @@
                            (finally
                              (.consume ~(with-meta (obj-and-event 1) {:tag "javafx.event.Event"})))))))
 
+;; --------------------------------------------
 
-(defmulti listen! (fn [_ listener] (type listener)))
+(defmulti listen! (fn
+                    ([_ listener] (type listener))
+                    ([_ listener-type f] [(type listener-type) (type f)])))
 
 (defmacro ^:private def-listen!
   [cls]                                                     ; Symbol
@@ -102,10 +106,17 @@
        (.addListener ~arg0 ~arg1))))
 
 (def-listen! InvalidationListener)
+
 (def-listen! ChangeListener)
 
+(defmethod listen! [Keyword IFn] [target listener-type f]
+  (listen! target (listener listener-type f)))
 
-(defmulti unlisten! (fn [_ listener] (type listener)))
+;; -----------------------------------------------
+
+(defmulti unlisten! (fn
+                      ([_ listener] (type listener))
+                      ([_ listener-type f] [(type listener-type) (type f)])))
 
 (defmacro ^:private def-unlisten!
   [cls]                                                     ; Symbol
@@ -115,7 +126,13 @@
        (.removeListener ~arg0 ~arg1))))
 
 (def-unlisten! InvalidationListener)
+
 (def-unlisten! ChangeListener)
+
+(defmethod unlisten! [Keyword IFn] [target listener-type f]
+  (unlisten! target (listener listener-type f)))
+
+;; --------------------------------------------------
 
 ;; リストアップはほぼ力技
 #_(def ^:private event-classes
