@@ -40,7 +40,8 @@
   ChangeListener
   (inner-fn [_] nil))
 
-(def ^:private listeners (ref (WeakHashMap.)))
+(def ^:private listeners (agent []))
+  (def ^:private listeners (ref (WeakHashMap.)))
 
 (defn get-cached-listener [f]
   (let [all (dosync (seq @listeners))]
