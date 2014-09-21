@@ -1,4 +1,4 @@
-(defproject cljfx "0.1.13"
+(defproject cljfx "0.1.14-SNAPSHOT"
             :description "JavaFX Clojure ラッパー"
             :url "https://github.com/shinmuro/cljfx"
             :license {:name "Eclipse Public License"

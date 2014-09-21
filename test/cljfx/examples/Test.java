@@ -2,6 +2,8 @@ package cljfx.examples;
 
 import com.sun.javafx.scene.NodeEventDispatcher;
 import javafx.application.Application;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventDispatcher;
 import javafx.event.EventHandler;
@@ -20,43 +22,26 @@ public class Test extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        VBox root = new VBox();
-        Button button = new Button();
-        root.getChildren().addAll(button);
-
-        primaryStage.setScene(new Scene(root, 400, 300));
-        primaryStage.show();
-
-        button.addEventHandler(ActionEvent.ACTION, System.out::println);
-        button.setOnAction(System.out::println);
-
-        EventDispatcher dispatcher = button.getEventDispatcher();
-        System.out.println(dispatcher);
-
-        NodeEventDispatcher dispatcher1 = (NodeEventDispatcher) dispatcher;
-        EventHandler eventHandler = dispatcher1.getEventHandlerManager().getEventHandler(ActionEvent.ACTION);
-        System.out.println(eventHandler);
     }
 
     public static void main(String[] args) {
-//        launch(args);
-        WeakHashMap<EventHandler, WeakReference<Object>> map = new WeakHashMap<>();
+        StringProperty s1 = new SimpleStringProperty() {
+            @Override
+            protected void invalidated() {
+                super.invalidated();
+                System.out.println("invalidated");
+            }
+        };
+        StringProperty s2 = new SimpleStringProperty();
+        s1.bind(s2);
 
-        EventHandler h1 = System.out::println;
-        Object f1 = new Object();
+        System.out.println("----------------------");
+        s2.set("aaa");
+        s1.unbind();
 
-        EventHandler h2 = System.out::print;
-        Object f2 = new Object();
-
-        map.put(h1, new WeakReference(f1));
-        map.put(h2, new WeakReference(f2));
-
-        System.out.println(map);
-
-        map.forEach((k, v) -> {
-            System.out.println(k + " --> " + v);
-            Object o = v.get();
-            System.out.println(o);
-        });
+        // ==============================================
+        s1.bindBidirectional(s2);
+        s1.set("1");
+        s2.set("2");
     }
 }

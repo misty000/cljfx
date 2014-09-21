@@ -16,7 +16,7 @@
 ;;============== Deprecated ==============
 
 ;  JavaFX Property を扱う関数。
-(defn- properties-fn-old
+(defn- ^:deprecated properties-fn-old
   "指定 JavaFX UI インスタンスのプロパティ情報を取得する。
    プロパティ名をキーとしたマップを返す。
 
@@ -32,7 +32,7 @@
    注意事項:
      impl_XXX や private なプロパティも取得できてしまっているが、使っても多分例外になるので使用しない事。"
   [obj]
-  (binding [*out* *err*] (println "the function was deprecated"))
+  (deprecated)
   (let [base-props
         (->> (:members (r/reflect obj :ancestors true))
              (map #(dissoc % :declaring-class :parameter-types :exception-types))
@@ -50,12 +50,12 @@
 
 
 
-(def ^:private properties-old (memoize properties-fn-old))
+(def ^:private ^:deprecated properties-old (memoize properties-fn-old))
 
 ;; TODO: ここエラーハンドリングきっちりしときたいが
 (defn- clj-invoke
   [target meth & args]
-  (binding [*out* *err*] (println "the function was deprecated"))
+  (deprecated)
   (prn '**clj-invoke** '< target '> meth args)
   (try (clojure.lang.Reflector/invokeInstanceMethod target meth (to-array args))
        (catch Exception e
@@ -65,27 +65,27 @@
 ;                                                (class target))))
 ;         (clojure.repl/pst))))
 
-(defn- getter-str-old
+(defn- ^:deprecated getter-str-old
   [target prop]
-  (binding [*out* *err*] (println "the function was deprecated"))
+  (deprecated)
   (str (if (isa? (-> (properties-old target) prop :return-type) BooleanExpression) "is" "get")
        (-> (properties-old target) prop :name upper-case-1st)))
 
-(defn v-old
+(defn ^:deprecated v-old
   "JavaFX UI インスタンスのプロパティ値を取得する。"
   [target prop]
-  (binding [*out* *err*] (println "the function was deprecated"))
+  (deprecated)
   (clj-invoke target (getter-str-old target prop)))
 
-(defn- setter-str-old
+(defn- ^:deprecated setter-str-old
   [target prop]
-  (binding [*out* *err*] (println "the function was deprecated"))
+  (deprecated)
   (str "set" (-> (properties-old target) prop :name upper-case-1st)))
 
-(defn v!-old
+(defn ^:deprecated v!-old
   "JavaFX UI インスタンスのプロパティ値を変更する。"
   ([target prop value]
-   (binding [*out* *err*] (println "the function was deprecated"))
+   (deprecated)
    (clj-invoke target (setter-str-old target prop) value))
   ([target prop value & prop-values]
    {:pre [(even? (count prop-values))]}
@@ -93,15 +93,15 @@
    (doseq [pvs (partition 2 prop-values)]
      (v!-old target (first pvs) (second pvs)))))
 
-(defn- prop-str-old
+(defn- ^:deprecated prop-str-old
   [target prop]
-  (binding [*out* *err*] (println "the function was deprecated"))
+  (deprecated)
   (str (-> (properties-old target) prop :name) "Property"))
 
-(defn p-old
+(defn ^:deprecated p-old
   "JavaFX UI インスタンスのプロパティそのものを取得する。主に bind 用。"
   [target prop]
-  (binding [*out* *err*] (println "the function was deprecated"))
+  (deprecated)
   (clj-invoke target (prop-str-old target prop)))
 
 ;;==========================================

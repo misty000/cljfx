@@ -52,14 +52,15 @@
        (let [wref# (get listeners ~f)]
          (if (and wref# (.get wref#))
            (.get wref#)
-           (let [listener# (reify
-                             ~cls
-                             (~ifmethod [this# ~@arg-syms] (apply ~f [this# ~@arg-syms]))
-                             PListener
-                             (inner-fn [_] ~f))
-                 wref# (WeakReference. listener#)]
-             (.put listeners ~f wref#)
-             listener#))))))
+           (do
+             (let [listener# (reify
+                               ~cls
+                               (~ifmethod [this# ~@arg-syms] (apply ~f [this# ~@arg-syms]))
+                               PListener
+                               (inner-fn [_] ~f))
+                   wref# (WeakReference. listener#)]
+               (.put listeners ~f wref#)
+               listener#)))))))
 
 (defmacro ^:private ^:deprecated listener*
   [cls ifmethod f & args]

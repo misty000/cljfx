@@ -1,8 +1,8 @@
-(ns
-    cljfx.examples.draggable
+(ns cljfx.examples.draggable
   (:use cljfx.core)
 
-  (:import javafx.beans.binding.Bindings))
+  (:import javafx.beans.binding.Bindings (javafx.event Event)
+           (javafx.scene.input MouseEvent)))
 
 (set! *warn-on-reflection* true)
 
@@ -33,12 +33,12 @@
         anchor-y (atom 0.0)
         trans-x (atom 0.0)
         trans-y (atom 0.0)]
-    (add-filter! node :mouse (fn [_ e]
+    (add-filter! node :mouse (fn [_ ^Event e]
                                (when (.get drag-mode) (.consume e))))
 
     (add-filter! node
                  :mouse-pressed
-                 (fn [_ e]
+                 (fn [_ ^MouseEvent e]
                    (when (.get drag-mode)
                      (reset! anchor-x (.getX e))
                      (reset! anchor-y (.getY e))
@@ -47,7 +47,7 @@
 
     (add-filter! node
                  :mouse-dragged
-                 (fn [_ e]
+                 (fn [_ ^MouseEvent e]
                    (when (.get drag-mode)
                      (v! node :translate-x (+ @trans-x (.getX e) (- @anchor-x)))
                      (v! node :translate-y (+ @trans-y (.getY e) (- @anchor-y))))))))

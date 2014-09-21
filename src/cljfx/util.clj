@@ -39,3 +39,6 @@
 (defn debug [& [x]]
   (when x (pprint x))
   x)
+
+(defn deprecated []
+  (binding [*out* *err*] (println "the function was deprecated")))
