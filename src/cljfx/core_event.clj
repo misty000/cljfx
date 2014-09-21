@@ -43,13 +43,13 @@
 
 ;;-------------------------------------------
 
-(def ^:private listeners (WeakHashMap.))
+(def ^:private ^WeakHashMap listeners (WeakHashMap.))
 
 (defmacro ^:private cached-listener*
   [cls ifmethod f & args]
   (when-let [arg-syms (map (comp gensym str) args)]
     `(locking listeners
-       (let [wref# (get listeners ~f)]
+       (let [^WeakReference wref# (get listeners ~f)]
          (if (and wref# (.get wref#))
            (.get wref#)
            (do
@@ -111,6 +111,7 @@
 (def-listen! ChangeListener)
 
 (defmethod listen! [Keyword IFn] [target listener-type f]
+  {:pre [(contains? #{:change :invalidated} listener-type)]}
   (listen! target (listener listener-type f)))
 
 ;; -----------------------------------------------
@@ -131,6 +132,7 @@
 (def-unlisten! ChangeListener)
 
 (defmethod unlisten! [Keyword IFn] [target listener-type f]
+  {:pre [(contains? #{:change :invalidated} listener-type)]}
   (unlisten! target (listener listener-type f)))
 
 ;; --------------------------------------------------
