@@ -10,4 +10,4 @@
             :codox {:exclude cljfx.deprecated.bind}
             :profiles {:dev {:resource-paths ["sample-resources"]}}
             :global-vars {*warn-on-reflection* true}
-            :aot [cljfx.primary cljfx.core])
+            :aot [cljfx.primary])
